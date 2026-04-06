@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tarot Journal">
+<title>Tarot Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0b1a;
+    --bg2: #160f2a;
+    --bg3: #1e1535;
+    --card: #1a1230;
+    --card2: #231944;
+    --border: rgba(180,150,255,0.12);
+    --border2: rgba(180,150,255,0.22);
+    --gold: #c9a84c;
+    --gold2: #e8c97a;
+    --purple: #7b4fa6;
+    --purple2: #9b6fcf;
+    --purple3: #c4a0f0;
+    --text: #f0eaf8;
+    --text2: #a898c8;
+    --text3: #6a5a8a;
+    --teal: #4ab8a8;
+    --rose: #c06080;
+    --success: #4a9a6a;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 430px;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Stars background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 15%, rgba(255,255,255,0.35) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 75%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 40%, rgba(255,255,255,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 85%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 92% 35%, rgba(255,255,255,0.35) 0%, transparent 100%),
+      radial-gradient(1px 1px at 8% 55%, rgba(255,255,255,0.25) 0%, transparent 100%),
+      radial-gradient(2px 2px at 60% 80%, rgba(200,160,255,0.4) 0%, transparent 100%),
+      radial-gradient(2px 2px at 30% 10%, rgba(200,160,255,0.35) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; padding-bottom: 90px; }
+
+  /* Header */
+  .header {
+    padding: 20px 20px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(14,11,26,0.8);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--gold2);
+    letter-spacing: 0.02em;
+  }
+  .header-date {
+    font-size: 12px;
+    color: var(--text3);
+    font-weight: 300;
+  }
+  .streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(201,168,76,0.12);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--gold);
+    font-weight: 500;
+  }
+
+  /* Nav */
+  .nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: rgba(14,11,26,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 200;
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 10px 0;
+    border: none;
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    transition: color 0.2s;
+    font-size: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
+  .nav-btn.active { color: var(--gold2); }
+  .nav-icon { font-size: 20px; line-height: 1; }
+
+  /* Screens */
+  .screen { display: none; padding: 16px 16px 0; animation: fadeIn 0.25s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Section headings */
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 14px;
+    letter-spacing: 0.01em;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-sm {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+
+  /* Form elements */
+  select, input[type="text"], input[type="date"], textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    appearance: none;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  select:focus, input:focus, textarea:focus {
+    border-color: var(--purple2);
+  }
+  select option { background: var(--bg2); }
+  textarea { resize: none; line-height: 1.5; }
+
+  /* Custom select wrapper */
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    pointer-events: none;
+    font-size: 12px;
+  }
+
+  /* Energy stars */
+  .star-row { display: flex; gap: 8px; margin-top: 4px; }
+  .star {
+    font-size: 24px;
+    cursor: pointer;
+    opacity: 0.3;
+    transition: opacity 0.15s, transform 0.15s;
+    line-height: 1;
+    background: none;
+    border: none;
+    color: var(--gold);
+  }
+  .star.active { opacity: 1; transform: scale(1.1); }
+
+  /* Primary button */
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--purple) 0%, #5a2d8a 100%);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: opacity 0.2s, transform 0.1s;
+    margin-top: 20px;
+  }
+  .btn-primary:active { opacity: 0.85; transform: scale(0.99); }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text2);
+    padding: 8px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-ghost:hover { background: var(--bg3); }
+
+  /* Tag chips */
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .tag {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tag.selected {
+    background: rgba(123,79,166,0.25);
+    border-color: var(--purple2);
+    color: var(--purple3);
+  }
+
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+  }
+  .stat-val { font-size: 26px; font-weight: 500; color: var(--gold2); font-family: 'Cormorant Garamond', serif; }
+  .stat-label { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* Reading list item */
+  .reading-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .reading-item:last-child { border-bottom: none; }
+  .reading-date {
+    font-size: 11px;
+    color: var(--text3);
+    white-space: nowrap;
+    padding-top: 2px;
+    min-width: 38px;
+    text-align: center;
+  }
+  .reading-date-num { font-size: 18px; font-weight: 500; color: var(--text2); font-family: 'Cormorant Garamond', serif; line-height: 1; }
+  .reading-topic {
+    display: inline-block;
+    background: rgba(74,184,168,0.12);
+    border: 1px solid rgba(74,184,168,0.2);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--teal);
+    margin-bottom: 4px;
+  }
+  .reading-cards { font-size: 13px; color: var(--text); line-height: 1.4; }
+  .reading-note { font-size: 12px; color: var(--text3); margin-top: 3px; font-style: italic; }
+  .energy-dots { display: flex; gap: 2px; margin-top: 4px; }
+  .energy-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border); }
+  .energy-dot.filled { background: var(--gold); }
+
+  /* Frequency bars */
+  .freq-item { margin-bottom: 10px; }
+  .freq-label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .freq-name { font-size: 13px; color: var(--text); }
+  .freq-count { font-size: 11px; color: var(--text3); font-weight: 500; }
+  .freq-bar-bg { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .freq-bar { height: 100%; background: linear-gradient(90deg, var(--purple) 0%, var(--purple2) 100%); border-radius: 3px; transition: width 0.5s ease; }
+
+  /* Topic badges */
+  .topic-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .topic-badge {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .topic-count {
+    background: rgba(123,79,166,0.3);
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-size: 10px;
+    color: var(--purple3);
+    font-weight: 500;
+  }
+
+  /* Card search */
+  .search-input {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    width: 100%;
+    outline: none;
+    margin-bottom: 8px;
+  }
+  .card-option {
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card-option:hover { background: var(--bg3); }
+  .card-option .suit-tag { font-size: 11px; color: var(--text3); }
+  .card-options-list { max-height: 220px; overflow-y: auto; }
+  .selected-card-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(123,79,166,0.2);
+    border: 1px solid var(--purple);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 13px;
+    color: var(--purple3);
+    margin: 4px 4px 0 0;
+  }
+  .remove-tag { cursor: pointer; color: var(--text3); font-size: 14px; line-height: 1; }
+
+  /* Success toast */
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--success);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 999;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Moon phase decoration */
+  .moon-deco {
+    text-align: center;
+    font-size: 40px;
+    margin: 10px 0 4px;
+    opacity: 0.6;
+  }
+  .empty-state { text-align: center; padding: 32px 16px; color: var(--text3); font-size: 14px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* Reversed toggle */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .toggle {
+    width: 44px; height: 24px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle.on { background: var(--purple); border-color: var(--purple); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: white;
+    top: 2px; left: 2px;
+    transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(20px); }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f4f0fa;
+      --bg2: #ebe4f5;
+      --bg3: #ddd4ef;
+      --card: #ffffff;
+      --card2: #f0eafa;
+      --border: rgba(100,60,160,0.1);
+      --border2: rgba(100,60,160,0.2);
+      --text: #1a0e30;
+      --text2: #4a3570;
+      --text3: #9080b0;
+    }
+    body::before { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div>
+      <div class="header-title">✦ Tarot Journal</div>
+      <div class="header-date" id="header-date"></div>
+    </div>
+    <div class="streak-badge" id="streak-badge">🔥 0 day streak</div>
+  </div>
+
+  <!-- LOG SCREEN -->
+  <div class="screen active" id="screen-log">
+    <div class="moon-deco" id="moon-phase">🌙</div>
+
+    <div class="section-label">Today's Reading</div>
+
+    <div class="card">
+      <div class="section-label" style="margin-top:0">Spread Type</div>
+      <div class="select-wrap">
+        <select id="spread-type">
+          <option value="">Choose spread...</option>
+          <option>1-Card Daily</option>
+          <option>3-Card (Past / Present / Future)</option>
+          <option>3-Card (Situation / Action / Outcome)</option>
+          <option>5-Card</option>
+          <option>Celtic Cross</option>
+          <option>Horseshoe</option>
+          <option>Year Ahead</option>
+          <option>Custom</option>
+        </select>
+      </div>
+
+      <div class="section-label">Cards Drawn</div>
+      <div id="selected-cards-display"></div>
+      <div class="select-wrap" style="position:relative">
+        <input class="search-input" id="card-search" placeholder="Search for a card..." autocomplete="off">
+        <div class="card-options-list" id="card-options"></div>
+      </div>
+
+      <div class="section-label">Topic / Theme</div>
+      <div class="tags" id="topic-tags"></div>
+
+      <div class="section-label">Your Question or Intention</div>
+      <textarea id="question-input" rows="2" placeholder="What are you asking about?"></textarea>
+
+      <div class="section-label">Intuitive Notes</div>
+      <textarea id="notes-input" rows="3" placeholder="First impressions, symbols that stood out, feelings..."></textarea>
+
+      <div class="section-label">Energy Rating</div>
+      <div class="star-row" id="star-row">
+        <button class="star" data-val="1" onclick="setStars(1)">★</button>
+        <button class="star" data-val="2" onclick="setStars(2)">★</button>
+        <button class="star" data-val="3" onclick="setStars(3)">★</button>
+        <button class="star" data-val="4" onclick="setStars(4)">★</button>
+        <button class="star" data-val="5" onclick="setStars(5)">★</button>
+      </div>
+
+      <button class="btn-primary" onclick="saveReading()">✦ Save Reading</button>
+    </div>
+  </div>
+
+  <!-- HISTORY SCREEN -->
+  <div class="screen" id="screen-history">
+    <div class="section-title">Past Readings</div>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- INSIGHTS SCREEN -->
+  <div class="screen" id="screen-insights">
+    <div class="section-title">Your Insights</div>
+
+    <div class="stats-row" id="stats-row"></div>
+
+    <div class="section-label">Most Drawn Cards</div>
+    <div class="card" id="freq-list"></div>
+
+    <div class="section-label">Topics Explored</div>
+    <div class="card">
+      <div class="topic-grid" id="topic-grid"></div>
+    </div>
+
+    <div class="section-label">Card ↔ Topic Patterns</div>
+    <div class="card" id="correlations"></div>
+
+    <div class="section-label">Backup & Export</div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:13px;color:var(--text2);line-height:1.5">Download your readings as a CSV file to back up your data or open in your tracking spreadsheet.</div>
+      <button class="btn-primary" style="margin-top:4px" onclick="exportCSV()">⬇ Export to CSV</button>
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Or copy all data as JSON for safekeeping:</div>
+        <button class="btn-ghost" style="width:100%" onclick="copyJSON()">Copy JSON backup</button>
+      </div>
+      <div id="json-copied" style="display:none;font-size:12px;color:var(--success);text-align:center">✓ Copied to clipboard!</div>
+    </div>
+
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- Bottom nav -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showScreen('log', this)">
+    <span class="nav-icon">✦</span>Log
+  </button>
+  <button class="nav-btn" onclick="showScreen('history', this)">
+    <span class="nav-icon">📖</span>History
+  </button>
+  <button class="nav-btn" onclick="showScreen('insights', this)">
+    <span class="nav-icon">◎</span>Insights
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ALL_CARDS = [
+  // Major Arcana
+  {name:"The Fool",suit:"Major Arcana"},
+  {name:"The Magician",suit:"Major Arcana"},
+  {name:"The High Priestess",suit:"Major Arcana"},
+  {name:"The Empress",suit:"Major Arcana"},
+  {name:"The Emperor",suit:"Major Arcana"},
+  {name:"The Hierophant",suit:"Major Arcana"},
+  {name:"The Lovers",suit:"Major Arcana"},
+  {name:"The Chariot",suit:"Major Arcana"},
+  {name:"Strength",suit:"Major Arcana"},
+  {name:"The Hermit",suit:"Major Arcana"},
+  {name:"Wheel of Fortune",suit:"Major Arcana"},
+  {name:"Justice",suit:"Major Arcana"},
+  {name:"The Hanged Man",suit:"Major Arcana"},
+  {name:"Death",suit:"Major Arcana"},
+  {name:"Temperance",suit:"Major Arcana"},
+  {name:"The Devil",suit:"Major Arcana"},
+  {name:"The Tower",suit:"Major Arcana"},
+  {name:"The Star",suit:"Major Arcana"},
+  {name:"The Moon",suit:"Major Arcana"},
+  {name:"The Sun",suit:"Major Arcana"},
+  {name:"Judgement",suit:"Major Arcana"},
+  {name:"The World",suit:"Major Arcana"},
+];
+
+["Wands","Cups","Swords","Pentacles"].forEach(suit => {
+  ["Ace","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Page","Knight","Queen","King"].forEach(rank => {
+    ALL_CARDS.push({name: rank === "Ace" ? `Ace of ${suit}` : `${rank} of ${suit}`, suit: `Minor – ${suit}`});
+  });
+});
+
+const TOPICS = [
+  "Love & Relationships","Career & Work","Finances","Personal Growth",
+  "Health & Wellness","Family","Friendships","Spirituality",
+  "Life Purpose","Decision Making","Creative Projects","Shadow Work",
+  "Daily Guidance","Other"
+];
+
+const MOON_PHASES = ["🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘"];
+
+// State
+let readings = JSON.parse(localStorage.getItem('tarot_readings') || '[]');
+let selectedCards = [];
+let selectedTopic = '';
+let energyRating = 0;
+let isReversed = false;
+let cardSearchFilter = '';
+
+function save() {
+  localStorage.setItem('tarot_readings', JSON.stringify(readings));
+}
+
+// Init
+function init() {
+  const now = new Date();
+  document.getElementById('header-date').textContent = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+
+  // Moon phase (approximate)
+  const phase = Math.floor((now.getDate() % 29.5) / 29.5 * 8);
+  document.getElementById('moon-phase').textContent = MOON_PHASES[phase] || '🌙';
+
+  renderTopicTags();
+  renderCardSearch('');
+  updateStreak();
+}
+
+function updateStreak() {
+  const today = new Date().toDateString();
+  let streak = 0;
+  const dates = readings.map(r => new Date(r.date).toDateString());
+  const uniqueDates = [...new Set(dates)].sort((a,b) => new Date(b)-new Date(a));
+  let check = new Date();
+  for (let d of uniqueDates) {
+    if (new Date(d).toDateString() === check.toDateString()) {
+      streak++;
+      check.setDate(check.getDate() - 1);
+    } else break;
+  }
+  document.getElementById('streak-badge').textContent = `🔥 ${streak} day${streak !== 1 ? 's' : ''} streak`;
+}
+
+// Screens
+function showScreen(name, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'history') renderHistory();
+  if (name === 'insights') renderInsights();
+}
+
+// Topics
+function renderTopicTags() {
+  const el = document.getElementById('topic-tags');
+  el.innerHTML = TOPICS.map(t =>
+    `<div class="tag ${selectedTopic===t?'selected':''}" onclick="selectTopic('${t}')">${t}</div>`
+  ).join('');
+}
+function selectTopic(t) {
+  selectedTopic = selectedTopic === t ? '' : t;
+  renderTopicTags();
+}
+
+// Card search
+function renderCardSearch(filter) {
+  const list = document.getElementById('card-options');
+  const filtered = ALL_CARDS.filter(c =>
+    c.name.toLowerCase().includes(filter.toLowerCase()) &&
+    !selectedCards.find(s => s.name === c.name)
+  );
+  if (filter.length < 1) { list.innerHTML = ''; return; }
+  list.innerHTML = filtered.slice(0, 20).map(c =>
+    `<div class="card-option" onclick="addCard('${c.name}','${c.suit}')">
+      <span>${c.name}</span><span class="suit-tag">${c.suit}</span>
+    </div>`
+  ).join('') || '<div style="padding:10px 12px;color:var(--text3);font-size:13px">No cards found</div>';
+}
+
+document.getElementById('card-search').addEventListener('input', function() {
+  cardSearchFilter = this.value;
+  renderCardSearch(this.value);
+});
+
+function addCard(name, suit) {
+  if (selectedCards.length >= 10) { showToast('Max 10 cards'); return; }
+  if (!selectedCards.find(c => c.name === name)) {
+    selectedCards.push({name, suit, reversed: false});
+    renderSelectedCards();
+    document.getElementById('card-search').value = '';
+    document.getElementById('card-options').innerHTML = '';
+  }
+}
+
+function removeCard(name) {
+  selectedCards = selectedCards.filter(c => c.name !== name);
+  renderSelectedCards();
+}
+
+function renderSelectedCards() {
+  const el = document.getElementById('selected-cards-display');
+  if (!selectedCards.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">' +
+    selectedCards.map((c, i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;">
+        <div>
+          <div style="font-size:13px;color:var(--text)">${c.name}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px">${c.suit}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:${c.reversed ? 'var(--rose)' : 'var(--text3)'}">${c.reversed ? 'Reversed' : 'Upright'}</span>
+            <div class="toggle ${c.reversed ? 'on' : ''}" style="width:36px;height:20px;border-radius:10px;flex-shrink:0" onclick="toggleCardReversed(${i})">
+              <style>.toggle::after{width:14px;height:14px;top:2px;left:2px}.toggle.on::after{transform:translateX(16px)}</style>
+            </div>
+          </div>
+          <span class="remove-tag" onclick="removeCard('${c.name}')" style="font-size:16px;color:var(--text3);padding:2px">×</span>
+        </div>
+      </div>
+    `).join('') + '</div>';
+}
+
+function toggleCardReversed(index) {
+  selectedCards[index].reversed = !selectedCards[index].reversed;
+  renderSelectedCards();
+}
+
+// Stars
+function setStars(val) {
+  energyRating = val;
+  document.querySelectorAll('.star').forEach(s => {
+    s.classList.toggle('active', parseInt(s.dataset.val) <= val);
+  });
+}
+
+// Save reading
+function saveReading() {
+  if (!selectedCards.length) { showToast('Add at least one card'); return; }
+  if (!selectedTopic) { showToast('Pick a topic'); return; }
+
+  const reading = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    spread: document.getElementById('spread-type').value || '1-Card Daily',
+    cards: selectedCards.map(c => ({name: c.name, suit: c.suit, reversed: c.reversed})),
+    topic: selectedTopic,
+    question: document.getElementById('question-input').value,
+    notes: document.getElementById('notes-input').value,
+    energy: energyRating
+  };
+
+  readings.unshift(reading);
+  save();
+
+  // Reset
+  selectedCards = [];
+  selectedTopic = '';
+  energyRating = 0;
+  renderSelectedCards();
+  renderTopicTags();
+  document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
+  document.getElementById('question-input').value = '';
+  document.getElementById('notes-input').value = '';
+  document.getElementById('spread-type').value = '';
+
+  updateStreak();
+  showToast('✦ Reading saved!');
+}
+
+// Toast
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// History
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  if (!readings.length) {
+    el.innerHTML = '<div class="empty-state">🌙<br><br>No readings yet.<br>Log your first one!</div>';
+    return;
+  }
+
+  el.innerHTML = readings.map(r => {
+    const d = new Date(r.date);
+    const dayNum = d.getDate();
+    const mon = d.toLocaleDateString('en-US',{month:'short'});
+    const dots = [1,2,3,4,5].map(i => `<div class="energy-dot ${i <= r.energy ? 'filled' : ''}"></div>`).join('');
+    const cardNames = r.cards.map(c => c.name + (c.reversed ? ' ↓' : '')).join(', ');
+    return `
+      <div class="reading-item">
+        <div class="reading-date">
+          <div class="reading-date-num">${dayNum}</div>
+          <div>${mon}</div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <span class="reading-topic">${r.topic}</span>
+          <div class="reading-cards">${cardNames}</div>
+          ${r.notes ? `<div class="reading-note">"${r.notes.slice(0,80)}${r.notes.length>80?'…':''}"</div>` : ''}
+          <div class="energy-dots">${dots}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (readings.length > 0) {
+    el.innerHTML = `<div class="card" style="padding:8px 16px">${el.innerHTML}</div>`;
+  }
+}
+
+// Insights
+function renderInsights() {
+  if (!readings.length) {
+    document.getElementById('stats-row').innerHTML = '';
+    document.getElementById('freq-list').innerHTML = '<div class="empty-state" style="padding:16px;text-align:center;color:var(--text3);font-size:13px">Log readings to see insights</div>';
+    document.getElementById('topic-grid').innerHTML = '';
+    document.getElementById('correlations').innerHTML = '<div style="color:var(--text3);font-size:13px">No data yet</div>';
+    return;
+  }
+
+  // Stats
+  const avgEnergy = readings.filter(r=>r.energy).reduce((a,r)=>a+r.energy,0) / (readings.filter(r=>r.energy).length||1);
+  const revCount = readings.filter(r=>r.reversed).length;
+  const thisMonth = readings.filter(r => {
+    const d = new Date(r.date); const n = new Date();
+    return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();
+  }).length;
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${readings.length}</div><div class="stat-label">Total Readings</div></div>
+    <div class="stat-card"><div class="stat-val">${thisMonth}</div><div class="stat-label">This Month</div></div>
+    <div class="stat-card"><div class="stat-val">${avgEnergy.toFixed(1)}</div><div class="stat-label">Avg Energy</div></div>
+    <div class="stat-card"><div class="stat-val">${Math.round(revCount/readings.length*100)}%</div><div class="stat-label">Reversed Readings</div></div>
+  `;
+
+  // Card frequency
+  const cardCounts = {};
+  readings.forEach(r => r.cards.forEach(c => {
+    cardCounts[c.name] = (cardCounts[c.name] || 0) + 1;
+  }));
+  const sorted = Object.entries(cardCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxCount = sorted[0]?.[1] || 1;
+
+  document.getElementById('freq-list').innerHTML = sorted.length ?
+    sorted.map(([name, count]) => `
+      <div class="freq-item">
+        <div class="freq-label">
+          <span class="freq-name">${name}</span>
+          <span class="freq-count">${count}×</span>
+        </div>
+        <div class="freq-bar-bg"><div class="freq-bar" style="width:${Math.round(count/maxCount*100)}%"></div></div>
+      </div>
+    `).join('') : '<div style="color:var(--text3);font-size:13px">No data yet</div>';
+
+  // Topics
+  const topicCounts = {};
+  readings.forEach(r => { if (r.topic) topicCounts[r.topic] = (topicCounts[r.topic]||0)+1; });
+  const topicSorted = Object.entries(topicCounts).sort((a,b)=>b[1]-a[1]);
+
+  document.getElementById('topic-grid').innerHTML = topicSorted.map(([t, c]) =>
+    `<div class="topic-badge">${t}<span class="topic-count">${c}</span></div>`
+  ).join('') || '<div style="color:var(--text3);font-size:13px">No data yet</div>';
+
+  // Correlations: top card per topic
+  const cardTopicMap = {};
+  readings.forEach(r => {
+    if (!r.topic) return;
+    r.cards.forEach(c => {
+      const key = `${c.name}|||${r.topic}`;
+      cardTopicMap[key] = (cardTopicMap[key]||0)+1;
+    });
+  });
+
+  const pairs = Object.entries(cardTopicMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  document.getElementById('correlations').innerHTML = pairs.length ?
+    `<div style="font-size:12px;color:var(--text3);margin-bottom:10px">Cards appearing most with each topic</div>` +
+    pairs.map(([key, count]) => {
+      const [card, topic] = key.split('|||');
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <div><div style="color:var(--text)">${card}</div><div style="color:var(--text3);font-size:11px;margin-top:2px">${topic}</div></div>
+        <div style="background:rgba(123,79,166,0.2);color:var(--purple3);border-radius:12px;padding:3px 10px;font-size:12px;font-weight:500">${count}×</div>
+      </div>`;
+    }).join('') :
+    '<div style="color:var(--text3);font-size:13px">Log more readings to see patterns</div>';
+}
+
+// Export to CSV
+function exportCSV() {
+  if (!readings.length) { showToast('No readings to export'); return; }
+
+  const headers = ['Date','Spread','Cards','Topic','Question','Notes','Energy Rating'];
+  const rows = readings.map(r => {
+    const d = new Date(r.date);
+    const dateStr = `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+    const cards = r.cards.map(c => c.name + (c.reversed ? ' (R)' : '')).join(' | ');
+    const esc = v => `"${String(v||'').replace(/"/g,'""')}"`;
+    return [
+      esc(dateStr),
+      esc(r.spread),
+      esc(cards),
+      esc(r.topic),
+      esc(r.question),
+      esc(r.notes),
+      esc(r.energy || '')
+    ].join(',');
+  });
+
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date();
+  a.href = url;
+  a.download = `tarot-journal-${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✦ CSV downloaded!');
+}
+
+// Copy JSON backup
+function copyJSON() {
+  if (!readings.length) { showToast('No readings to copy'); return; }
+  const json = JSON.stringify(readings, null, 2);
+  navigator.clipboard.writeText(json).then(() => {
+    const el = document.getElementById('json-copied');
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 2500);
+  }).catch(() => showToast('Copy failed — try long-pressing'));
+}
+
+init();
+</script>
+</body>
+</html>
